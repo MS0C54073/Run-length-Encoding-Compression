@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cstdio>
+#include <fstream>
 #include <cstring>
 
 using namespace std;
@@ -11,12 +11,12 @@ class RLECompression
 	int previousByte;
 	
 	public:
-		RLECompression(char* option, FILE* inFile, FILE* outFile);
-		void compress(FILE* inFile, FILE* outFile);
-		void decompress(FILE* inFile, FILE* outFile);
+		RLECompression(char* option, ifstream& inFile, ofstream& outFile);
+		void compress(ifstream& inFile, ofstream& outFile);
+		void decompress(ifstream& inFile, ofstream& outFile);
 };
 
-RLECompression::RLECompression(char* option, FILE* inFile, FILE* outFile)
+RLECompression::RLECompression(char* option, ifstream& inFile, ofstream& outFile)
 {
 	if(strcmp(option, "-c") == 0)
 		compress(inFile, outFile);
@@ -24,9 +24,9 @@ RLECompression::RLECompression(char* option, FILE* inFile, FILE* outFile)
 		decompress(inFile, outFile);	
 }
 
-void RLECompression::compress(FILE* inFile, FILE* outFile)
+void RLECompression::compress(ifstream& inFile, ofstream& outFile)
 {
-	nextByte = fgetc(inFile);
+	nextByte = inFile.get();
 	previousByte = nextByte;
 	
 	while(nextByte != EOF)
@@ -35,38 +35,38 @@ void RLECompression::compress(FILE* inFile, FILE* outFile)
 		
 		previousByte = nextByte;
 		
-		while((nextByte = fgetc(inFile)) != EOF && nextByte == previousByte)
+		while((nextByte = inFile.get()) != EOF && nextByte == previousByte)
 			runLength++;
 			
-		fputc(runLength, outFile);
-		fputc(previousByte, outFile);
+		outFile.put(runLength);
+		outFile.put(previousByte);
 	}
 }
 
-void RLECompression::decompress(FILE* inFile, FILE* outFile)
+void RLECompression::decompress(ifstream& inFile, ofstream& outFile)
 {
-	while((runLength = fgetc(inFile)) != EOF)
+	while((runLength = inFile.get()) != EOF)
 	{	
-		nextByte = fgetc(inFile);
+		nextByte = inFile.get();
 		
 		for(int i = 0; i < runLength; i++)
-			fputc(nextByte, outFile);
+			outFile.put(nextByte);
 	}
 }
 
 int main(int argc, char* argv[])
 {
-	FILE* inFile;
- 	FILE* outFile;
+	ifstream inFile;
+ 	ofstream outFile;
  	
  	char* option = argv[1];
- 	inFile = fopen(argv[2], "r");
-	outFile = fopen(argv[3], "w");
+ 	inFile.open(argv[2]);
+	outFile.open(argv[3]);
 	
 	RLECompression* compression = new RLECompression(option, inFile, outFile);
 
-	fclose(inFile);
-	fclose(outFile);
+	inFile.close();
+	outFile.close();
 	
 	return 0;
 }
